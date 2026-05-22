@@ -9,6 +9,15 @@ An enterprise-grade, multi-agent architecture for Gemini CLI designed for extrem
 *   **Autonomous Self-Correction**: A formal S.S.V.E. loop (Stop, Speculate, Verify, Execute) for hypothesis-driven debugging.
 *   **State Persistence**: Native integration with Gemini's `tracker_*` tools to manage long-running "Epics" via Directed Acyclic Graphs (DAGs).
 *   **Spec-Driven Development**: Codifies requirements into physical artifacts to prevent "requirement drift" in long sessions.
+*   **Social Media AI Manager**: A full-featured integration for Twitter (X), Facebook, Instagram, and Snapchat with mobile-optimized onboarding and AI orchestration.
+
+---
+
+## 🚀 Key Integrations: Social Media AI
+The `social-mcp-server` provides a unified interface for cross-platform posting:
+*   **Intelligent Posting**: Command the bot in plain English: "Post this photo to IG and Twitter".
+*   **Automatic Media Handling**: Upload photos via Telegram; the bot handles CDN conversion and API delivery.
+*   **Interactive /setup**: Guided walkthroughs for acquiring API keys on Android and iPhone.
 
 ---
 
@@ -16,7 +25,7 @@ An enterprise-grade, multi-agent architecture for Gemini CLI designed for extrem
 
 1.  **Clone the Repository**:
     ```bash
-    git clone https://github.com/0King0P/gemini-cli-agent-system.git ~/.gemini-custom
+    git clone https://github.com/0King0P/GeminiSkillsets.git ~/.gemini-custom
     ```
 
 2.  **Deploy Instructions & Agents**:

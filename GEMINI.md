@@ -51,6 +51,12 @@ Before any tool call, classify the task complexity and respect the associated to
 - **Efficiency:** Favor silent flags (`-y`, `-q`, `--no-pager`) to minimize interactive prompts and output volume.
 - **Frictionless Workflow:** To bypass the CLI's built-in confirmation prompts, the user is encouraged to launch with `gemini --yolo` or set an "allow" policy in `~/.gemini/policies/`.
 
+### 6. Social Media Automation
+- **Unified Tooling:** Always use the `SocialMedia` MCP server (FastMCP) for platform interactions.
+- **Media Strategy:** Favor public CDN URLs (e.g., ImgBB) for media-based posts to ensure compatibility with Graph/Snapchat APIs.
+- **Auth Integrity:** Never commit long-lived tokens; use `.env` and provide instructions via the `/setup` flow.
+- **Agent Orchestration:** Use Gemini 2.0's Automatic Tool Use to handle cross-platform sequencing.
+
 ---
 
 ## Workspace Navigation
