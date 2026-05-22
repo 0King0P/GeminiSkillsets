@@ -21,7 +21,21 @@ The `social-mcp-server` provides a unified interface for cross-platform posting:
 
 ---
 
-## 🛠 Installation & Setup
+## 🚀 One-Command Setup (Recommended)
+The most frictionless way to get started is using the interactive system installer. Simply clone the repository and run:
+
+**"Run the system installer"** 
+
+This will:
+*   Automatically deploy all Agents, Skills, and Policies.
+*   Setup the Python environment and dependencies.
+*   Interactively guide you through adding your API keys.
+*   Launch the Social Media AI Bot for you.
+
+---
+
+## 🛠 Manual Installation & Setup (Alternative)
+If you prefer to configure things yourself:
 
 1.  **Clone the Repository**:
     ```bash
