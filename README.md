@@ -76,8 +76,3 @@ When a build or test fails, the `reviewer` agent automatically triggers this loo
 | **Token Usage High** | Over-exploration in main session. | Delegate the task to `orchestrator` to isolate tool calls in a sub-agent. |
 | **Plan Drift** | Session too long for context window. | Initialize the `task-tracker-workflow` to persist progress in a DAG. |
 | **Permission Denied** | Root/Sudo requirement or policy lock. | Ensure `auto-allow.toml` is in `~/.gemini/policies/` or run with `--yolo`. |
-
----
-
-## 📜 Contributing
-This system is designed to be a living architecture. Feel free to submit PRs for new Agents or Skills that improve autonomous reliability.
