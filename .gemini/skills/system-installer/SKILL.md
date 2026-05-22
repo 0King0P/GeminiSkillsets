@@ -33,12 +33,13 @@ Prompt the user for the following required keys using `ask_user`:
 *Note: `GEMINI_API_KEY` is no longer required, as the system leverages your existing Ultra/OAuth session.*
 
 Once provided, write them securely to `social-mcp-server/.env`.
-
-### Step 4: Final Launch
-Offer to start the bot immediately:
-- "Would you like to start the Social Media AI Bot now?"
-- If yes, run `uv run python bot.py` in the background.
+### Step 4: Automated Final Launch
+Once the environment is ready and keys are saved, the agent MUST offer to start the bot immediately:
+1.  **Prompt**: "System is configured. Would you like me to start the Social Media AI Bot in the background now?"
+2.  **Action**: If the user agrees, run `cd social-mcp-server && uv run python bot.py` as a **background process** (`is_background=true`).
+3.  **Confirmation**: Provide the user with the command to check logs: `tail -f social-mcp-server/bot.log` (if logging to file) or simply confirm it's running.
 
 ## Troubleshooting
+...
 - If a step fails, use the `autonomous-self-correction` skill to diagnose issues (e.g., missing `uv`, write permissions).
 - Ensure the user is running this from the `GeminiSkillsets` root directory.
