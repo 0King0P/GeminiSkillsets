@@ -1,15 +1,12 @@
 import os
 import logging
 import asyncio
+import json
+import subprocess
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
-from google import genai
-from google.genai import types
 import imgbbpy
-
-# Import tools from server.py
-from server import post_to_instagram, post_to_twitter, post_to_facebook, post_to_snapchat
 
 # Load environment variables
 load_dotenv()
@@ -20,17 +17,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Gemini Client
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    # Automatic Tool Use is handled by passing functions to tools list
-    client = genai.Client(api_key=GEMINI_API_KEY)
-else:
-    client = None
-    logger.warning("GEMINI_API_KEY not found. AI features will be disabled.")
+async def call_gemini_cli(prompt: str) -> str:
+    """Calls the Gemini CLI in headless mode using the existing OAuth session."""
+    try:
+        # Construct the command
+        # We use -p for headless mode and JSON output for parsing
+        cmd = ["gemini", "-p", prompt, "--output-format", "json"]
+        
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd="/root"  # Run from workspace root to access tools/context
+        )
+        
+        stdout, stderr = await process.communicate()
+        
+        if process.returncode != 0:
+            err_msg = stderr.decode()
+            logger.error(f"Gemini CLI Error: {err_msg}")
+            return f"❌ AI Error: {err_msg}"
 
-# Define tools for Gemini
-SOCIAL_TOOLS = [post_to_instagram, post_to_twitter, post_to_facebook, post_to_snapchat]
+        data = json.loads(stdout.decode())
+        return data.get("response") or data.get("text", "No response received.")
+        
+    except Exception as e:
+        logger.exception("Failed to call Gemini CLI")
+        return f"⚠️ System Exception: {str(e)}"
 
 # --- Setup Instructions Text ---
 SETUP_INSTRUCTIONS = {
@@ -89,29 +102,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     await update.message.reply_html(
         rf"Hi {user.mention_html()}! 👋 I am your Social Media AI Manager."
-        "\n\nI can help you post content across all your platforms using natural language."
-        "\n\nExample: 'Post this photo to Instagram and Twitter: [URL] with caption #SummerVibes'"
+        "\n\nI am connected directly to your **Gemini Ultra** session."
+        "\n\nExample: 'Post this photo to IG and Twitter with caption #AI'"
         "\n\nType /setup to configure your accounts."
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Process user messages using Gemini and Social Media tools."""
-    if not client:
-        await update.message.reply_text("❌ AI features are disabled. Please set GEMINI_API_KEY in .env")
-        return
-
-    # Check if there is a photo in the message
+    """Process user messages using the Gemini CLI subprocess."""
     user_text = update.message.text or update.message.caption or ""
     photo = update.message.photo
     
     await update.message.reply_chat_action("typing")
 
-    media_url = None
     if photo:
-        # Handle media upload to generate a public URL
         imgbb_key = os.getenv("IMGBB_API_KEY")
         if not imgbb_key:
-            await update.message.reply_text("⚠️ To post photos, please set IMGBB_API_KEY in your .env")
+            await update.message.reply_text("⚠️ Please set IMGBB_API_KEY in .env to post photos.")
             return
             
         file = await context.bot.get_file(photo[-1].file_id)
@@ -122,7 +128,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             ib_client = imgbbpy.SyncClient(imgbb_key)
             image = ib_client.upload(file=file_path)
             media_url = image.url
-            user_text += f"\n\n[USER ATTACHED MEDIA: {media_url}]"
+            user_text = f"The user attached an image: {media_url}. \n\nRequest: {user_text}"
         except Exception as e:
             await update.message.reply_text(f"❌ Media upload failed: {str(e)}")
             return
@@ -130,27 +136,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             if os.path.exists(file_path):
                 os.remove(file_path)
 
-    try:
-        # Use Automatic Tool Use with Gemini 2.0
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=user_text,
-            config=types.GenerateContentConfig(
-                tools=SOCIAL_TOOLS,
-                system_instruction=(
-                    "You are a professional Social Media Manager. Your job is to help the user post content "
-                    "to Twitter, Instagram, Facebook, and Snapchat. Use the provided tools to execute "
-                    "these posts. If a media URL is provided in the prompt, use it for image-based posts. "
-                    "Confirm the status of each post back to the user clearly."
-                )
-            )
-        )
+    # Wrap the prompt with instructions for the CLI
+    system_prompt = (
+        "Context: Social Media AI Manager. \n"
+        "Instructions: Post the following content to the requested platforms. "
+        "Use the post_to_twitter, post_to_instagram, etc. tools available in the workspace. "
+        "Confirm the result of each tool call.\n\n"
+        f"User Prompt: {user_text}"
+    )
 
-        await update.message.reply_text(response.text)
-
-    except Exception as e:
-        logger.exception("Error during AI processing")
-        await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
+    response_text = await call_gemini_cli(system_prompt)
+    await update.message.reply_text(response_text)
 
 async def setup(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message with inline buttons to select a platform to set up."""
@@ -218,7 +214,6 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("setup", setup))
     application.add_handler(CallbackQueryHandler(button_callback))
-    # Handle both text and photos
     application.add_handler(MessageHandler(filters.TEXT | filters.PHOTO, handle_message))
 
     logger.info("Starting Social Media AI Bot...")

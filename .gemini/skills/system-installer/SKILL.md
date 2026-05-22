@@ -28,8 +28,9 @@ Initialize the Python environment for the Social Media AI Manager:
 ### Step 3: Interactive Credential Setup
 Prompt the user for the following required keys using `ask_user`:
 - `TELEGRAM_BOT_TOKEN`: From @BotFather.
-- `GEMINI_API_KEY`: From Google AI Studio.
-- `IMGBB_API_KEY`: From api.imgbb.com.
+- `IMGBB_API_KEY`: From api.imgbb.com (to allow photo posting from your phone).
+
+*Note: `GEMINI_API_KEY` is no longer required, as the system leverages your existing Ultra/OAuth session.*
 
 Once provided, write them securely to `social-mcp-server/.env`.
 
